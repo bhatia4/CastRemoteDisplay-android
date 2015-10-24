@@ -19,6 +19,7 @@ package com.example.castremotedisplay;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.CastRemoteDisplayLocalService;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
 
 import android.app.PendingIntent;
@@ -66,6 +67,7 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
     private MediaRouter mMediaRouter;
     private MediaRouteSelector mMediaRouteSelector;
 
+    private GoogleApiClient mApiClient;
     private CastDevice mCastDevice;
 
     /**
@@ -245,4 +247,30 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 });
     }
 
+    /**
+     * Send a text message to the receiver
+     *
+     * @param message
+     */
+    private void sendMessage(String message) {
+        if (mApiClient != null && mHelloWorldChannel != null) {
+            try {
+                Cast.CastApi.sendMessage(mApiClient,
+                        mHelloWorldChannel.getNamespace(), message)
+                        .setResultCallback(new ResultCallback<Status>() {
+                            @Override
+                            public void onResult(Status result) {
+                                if (!result.isSuccess()) {
+                                    Log.e(TAG, "Sending message failed");
+                                }
+                            }
+                        });
+            } catch (Exception e) {
+                Log.e(TAG, "Exception while sending message", e);
+            }
+        } else {
+            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT)
+                    .show();
+        }
+    }
 }

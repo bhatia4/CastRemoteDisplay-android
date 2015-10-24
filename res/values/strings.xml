@@ -17,14 +17,20 @@
 <resources>
 
     <string name="app_name">CastRemoteDisplay</string>
-    <string name="app_description">CAST REMOTE DISPLAY SAMPLE</string>
-    <string name="app_id">YOUR_APP_ID</string>
-    <string name="presentation_with_media_router_activity_text">This activity demonstrates how to use CastRemoteDisplay.</string>
+    <string name="app_description">Remote</string>
+    <string name="app_id">AAECE0D8</string>
+    <string name="presentation_with_media_router_activity_text">REMOTE</string>
     <string name="presentation_with_media_router_play_on">Play on...</string>
     <string name="presentation_with_media_router_now_playing_locally">Now playing on main display \'%s\'.</string>
     <string name="presentation_with_media_router_now_playing_remotely">Now playing on secondary display \'%s\'.</string>
     <string name="init_error">Error starting the remote display</string>
     <string name="play">PLAY</string>
-    <string name="change_color">CHANGE COLOR</string>
+    <string name="home">Home</string>
+
+    <string name="up">Up</string>
+    <string name="down">Down</string>
+    <string name="left">Left</string>
+    <string name="right">Right</string>
+    <string name="click">Click</string>
 
 </resources>
