@@ -1,0 +1,849 @@
+Index: res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- res/values/strings.xml	(date 1435694664000)
++++ res/values/strings.xml	(revision )
+@@ -17,14 +17,20 @@
+ <resources>
+ 
+     <string name="app_name">CastRemoteDisplay</string>
+-    <string name="app_description">CAST REMOTE DISPLAY SAMPLE</string>
+-    <string name="app_id">YOUR_APP_ID</string>
+-    <string name="presentation_with_media_router_activity_text">This activity demonstrates how to use CastRemoteDisplay.</string>
++    <string name="app_description">Remote</string>
++    <string name="app_id">AAECE0D8</string>
++    <string name="presentation_with_media_router_activity_text">REMOTE</string>
+     <string name="presentation_with_media_router_play_on">Play on...</string>
+     <string name="presentation_with_media_router_now_playing_locally">Now playing on main display \'%s\'.</string>
+     <string name="presentation_with_media_router_now_playing_remotely">Now playing on secondary display \'%s\'.</string>
+     <string name="init_error">Error starting the remote display</string>
+     <string name="play">PLAY</string>
+-    <string name="change_color">CHANGE COLOR</string>
++    <string name="home">Home</string>
++
++    <string name="up">Up</string>
++    <string name="down">Down</string>
++    <string name="left">Left</string>
++    <string name="right">Right</string>
++    <string name="click">Click</string>
+ 
+ </resources>
+Index: src/com/example/castremotedisplay/PresentationService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/com/example/castremotedisplay/PresentationService.java	(date 1435694664000)
++++ src/com/example/castremotedisplay/PresentationService.java	(revision )
+@@ -43,7 +43,7 @@
+     // First screen
+     private CastPresentation mPresentation;
+     private MediaPlayer mMediaPlayer;
+-    private CubeRenderer mCubeRenderer;
++//    private CubeRenderer mCubeRenderer;
+ 
+     @Override
+     public void onCreate() {
+@@ -89,7 +89,7 @@
+      * Utility method to allow the user to change the cube color.
+      */
+     public void changeColor() {
+-        mCubeRenderer.changeColor();
++        /*mCubeRenderer.changeColor();*/
+     }
+ 
+     /**
+@@ -111,120 +111,6 @@
+         @Override
+         protected void onCreate(Bundle savedInstanceState) {
+             super.onCreate(savedInstanceState);
+-
+-            setContentView(R.layout.first_screen_layout);
+-
+-            TextView titleTextView = (TextView) findViewById(R.id.title);
+-            // Use TrueType font to get best looking text on remote display
+-            Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/Roboto-Light.ttf");
+-            titleTextView.setTypeface(typeface);
+-
+-            GLSurfaceView firstScreenSurfaceView = (GLSurfaceView) findViewById(R.id.surface_view);
+-            // Create an OpenGL ES 2.0 context.
+-            firstScreenSurfaceView.setEGLContextClientVersion(2);
+-            // Allow UI elements above this surface; used for text overlay
+-            firstScreenSurfaceView.setZOrderMediaOverlay(true);
+-            // Enable anti-aliasing
+-            firstScreenSurfaceView.setEGLConfigChooser(new CustomConfigChooser());
+-            mCubeRenderer = new com.example.castremotedisplay.CubeRenderer();
+-            firstScreenSurfaceView.setRenderer(mCubeRenderer);
+         }
+-
+-        /**
+-         * OpenGL config to enable custom anti-aliasing
+-         */
+-        private final class CustomConfigChooser implements GLSurfaceView.EGLConfigChooser {
+-
+-            private int[] mValue = new int[1];
+-            protected int mRedSize = 8;
+-            protected int mGreenSize = 8;
+-            protected int mBlueSize = 8;
+-            protected int mAlphaSize = 8;
+-            protected int mDepthSize = 16;
+-            protected int mStencilSize = 0;
+-
+-            @Override
+-            public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
+-                int[] configSpec = {
+-                        EGL10.EGL_RED_SIZE, mRedSize,
+-                        EGL10.EGL_GREEN_SIZE, mGreenSize,
+-                        EGL10.EGL_BLUE_SIZE, mBlueSize,
+-                        EGL10.EGL_ALPHA_SIZE, mAlphaSize,
+-                        EGL10.EGL_DEPTH_SIZE, mDepthSize,
+-                        EGL10.EGL_STENCIL_SIZE, mStencilSize,
+-                        EGL10.EGL_RENDERABLE_TYPE, 4,
+-                        EGL10.EGL_SAMPLE_BUFFERS, 1,
+-                        EGL10.EGL_SAMPLES, 4,
+-                        EGL10.EGL_NONE
+-                };
+-                int[] num_config = new int[1];
+-                if (!egl.eglChooseConfig(display, configSpec, null, 0, num_config)) {
+-                    throw new IllegalArgumentException("eglChooseConfig1 failed");
+-                }
++    }
+-
+-                int numConfigs = num_config[0];
+-
+-                if (numConfigs <= 0) {
+-                    // Don't do anti-aliasing
+-                    configSpec = new int[]{
+-                            EGL10.EGL_RED_SIZE, mRedSize,
+-                            EGL10.EGL_GREEN_SIZE, mGreenSize,
+-                            EGL10.EGL_BLUE_SIZE, mBlueSize,
+-                            EGL10.EGL_ALPHA_SIZE, mAlphaSize,
+-                            EGL10.EGL_DEPTH_SIZE, mDepthSize,
+-                            EGL10.EGL_STENCIL_SIZE, mStencilSize,
+-                            EGL10.EGL_RENDERABLE_TYPE, 4,
+-                            EGL10.EGL_NONE
+-                    };
+-
+-                    if (!egl.eglChooseConfig(display, configSpec, null, 0, num_config)) {
+-                        throw new IllegalArgumentException("eglChooseConfig2 failed");
+-                    }
+-                    numConfigs = num_config[0];
+-
+-                    if (numConfigs <= 0) {
+-                        throw new IllegalArgumentException("No configs match configSpec");
+-                    }
+-                }
+-
+-                EGLConfig[] configs = new EGLConfig[numConfigs];
+-                if (!egl.eglChooseConfig(display, configSpec, configs, numConfigs, num_config)) {
+-                    throw new IllegalArgumentException("eglChooseConfig3 failed");
+-                }
+-                EGLConfig config = findConfig(egl, display, configs);
+-                if (config == null) {
+-                    throw new IllegalArgumentException("No config chosen");
+-                }
+-                return config;
+-            }
+-
+-            private EGLConfig findConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
+-                for (EGLConfig config : configs) {
+-                    int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
+-                    int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
+-                    if ((d >= mDepthSize) && (s >= mStencilSize)) {
+-                        int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
+-                        int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
+-                        int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
+-                        int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
+-                        if ((r == mRedSize) && (g == mGreenSize) && (b == mBlueSize) && (a
+-                                == mAlphaSize)) {
+-                            return config;
+-                        }
+-                    }
+-                }
+-                return null;
+-            }
+-
+-            private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config,
+-                    int attribute,
+-                    int defaultValue) {
+-                if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
+-                    return mValue[0];
+-                }
+-                return defaultValue;
+-            }
+-        }
+-    }
+-
+ }
+Index: AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- AndroidManifest.xml	(date 1435694664000)
++++ AndroidManifest.xml	(revision )
+@@ -1,0 +1,0 @@
+Index: src/com/example/castremotedisplay/Cube.java
+===================================================================
+--- src/com/example/castremotedisplay/Cube.java	(date 1435694664000)
++++ src/com/example/castremotedisplay/Cube.java	(date 1435694664000)
+@@ -1,306 +0,0 @@
+-/*
+- * Copyright (C) 2015 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.example.castremotedisplay;
+-
+-import android.opengl.GLES20;
+-import android.util.Log;
+-
+-import java.nio.ByteBuffer;
+-import java.nio.ByteOrder;
+-import java.nio.FloatBuffer;
+-import java.nio.ShortBuffer;
+-
+-/**
+- * A shaded cube rendered in OpenGL ES 2.0
+- */
+-public class Cube {
+-
+-    private static final String TAG = "Cube";
+-
+-    private static final String VERTEX_SHADER_CODE =
+-            // This matrix member variable provides a hook to manipulate
+-            // the coordinates of the objects that use this vertex shader
+-            "uniform mat4 uMVPMatrix;" +
+-                    "attribute vec4 vPosition;" +
+-                    "attribute vec4 vColor;" +
+-                    "varying vec4 aColor;" +
+-                    "void main() {" +
+-                    "aColor = vColor;" +
+-                    // The matrix must be included as a modifier of gl_Position.
+-                    // Note that the uMVPMatrix factor *must be first* in order
+-                    // for the matrix multiplication product to be correct.
+-                    "  gl_Position = uMVPMatrix * vPosition;" +
+-                    "}";
+-
+-    private static final String FRAGMENT_SHADER_CODE =
+-            "precision mediump float;" +
+-                    "varying vec4 aColor;" +
+-                    "void main() {" +
+-                    "  gl_FragColor = aColor;" +
+-                    "}";
+-
+-    private static final int BYTES_PER_FLOAT = 4;
+-    private static final int BYTES_PER_SHORT = 2;
+-
+-    // Number of coordinates per vertex in this array
+-    private static final int COORDS_PER_VERTEX = 3;
+-    private static final int VERTEX_STRIDE = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
+-
+-    private static final int COORDS_PER_COLORS = 4;
+-    private static final int COLORS_STRIDE = COORDS_PER_COLORS * 4; // 4 bytes per vertex
+-
+-    private static final float VERTICES[] = {
+-            -1.0f, -1.0f, -1.0f,
+-            1.0f, -1.0f, -1.0f,
+-            1.0f, 1.0f, -1.0f,
+-            -1.0f, 1.0f, -1.0f,
+-            -1.0f, -1.0f, 1.0f,
+-            1.0f, -1.0f, 1.0f,
+-            1.0f, 1.0f, 1.0f,
+-            -1.0f, 1.0f, 1.0f,
+-    };
+-
+-    private static final float COLORS1[] = {
+-            0, 0, 0, 1.0f,
+-            1.0f, 0, 0, 1.0f,
+-            1.0f, 1.0f, 0, 1.0f,
+-            0, 1.0f, 0, 1.0f,
+-            0, 0, 1.0f, 1.0f,
+-            1.0f, 0, 1.0f, 1.0f,
+-            1.0f, 1.0f, 1.0f, 1.0f,
+-            0, 1.0f, 1.0f, 1.0f,
+-    };
+-
+-    private static final float COLORS2[] = {
+-            0, 0, 1.0f, 1.0f,
+-            1.0f, 1.0f, 1.0f, 1.0f,
+-            0.0f, 0.0f, 1.0f, 1.0f,
+-            1.0f, 1.0f, 1.0f, 1.0f,
+-            0, 0, 1.0f, 1.0f,
+-            1.0f, 1.0f, 1.0f, 1.0f,
+-            0.0f, 0.0f, 1.0f, 1.0f,
+-            1.0f, 1.0f, 1.0f, 1.0f,
+-    };
+-
+-    private static final short INDICES[] = {
+-            0, 4, 5, 0, 5, 1,
+-            1, 5, 6, 1, 6, 2,
+-            2, 6, 7, 2, 7, 3,
+-            3, 7, 4, 3, 4, 0,
+-            4, 7, 6, 4, 6, 5,
+-            3, 0, 1, 3, 1, 2
+-    };
+-
+-    private int mProgram;
+-    private int mPositionHandle;
+-    private int mColor;
+-    private int mMVPMatrixHandle;
+-
+-    private FloatBuffer mVertexBuffer;
+-    private FloatBuffer mColor1Buffer;
+-    private FloatBuffer mColor2Buffer;
+-    private ShortBuffer mIndexBuffer;
+-
+-    public Cube() {
+-        // Prepare shaders and OpenGL program
+-        int vertexShader = loadShader(
+-                GLES20.GL_VERTEX_SHADER,
+-                VERTEX_SHADER_CODE);
+-        if (vertexShader == 0) {
+-            Log.e(TAG, "Vertex shader failed");
+-            return;
+-        }
+-        int fragmentShader = loadShader(
+-                GLES20.GL_FRAGMENT_SHADER,
+-                FRAGMENT_SHADER_CODE);
+-        if (fragmentShader == 0) {
+-            Log.e(TAG, "Fragment shader failed");
+-            return;
+-        }
+-
+-        mProgram = GLES20.glCreateProgram();             // create empty OpenGL Program
+-        GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
+-        GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
+-        GLES20.glLinkProgram(mProgram);                  // create OpenGL program executables
+-
+-        int[] linkStatus = new int[1];
+-        GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
+-        if (linkStatus[0] != GLES20.GL_TRUE) {
+-            Log.e(TAG, "Could not link program: ");
+-            Log.e(TAG, GLES20.glGetProgramInfoLog(mProgram));
+-            GLES20.glDeleteProgram(mProgram);
+-            mProgram = 0;
+-            return;
+-        }
+-        GLES20.glDeleteShader(vertexShader);
+-        GLES20.glDeleteShader(fragmentShader);
+-
+-        // Initialize vertex byte buffer for shape coordinates
+-        mVertexBuffer = allocateFloatBuffer(VERTICES);
+-
+-        // Initialize byte buffer for the colors
+-        mColor1Buffer = allocateFloatBuffer(COLORS1);
+-        mColor2Buffer = allocateFloatBuffer(COLORS2);
+-
+-        // Initialize byte buffer for the draw list
+-        mIndexBuffer = allocateShortBuffer(INDICES);
+-    }
+-
+-    /**
+-     * Encapsulates the OpenGL ES instructions for drawing this shape.
+-     *
+-     * @param mvpMatrix - The Model View Project matrix in which to draw
+-     *                  this shape.
+-     */
+-    public void draw(float[] mvpMatrix, boolean changeColor) {
+-        if (mProgram != 0) {
+-            // Add program to OpenGL environment
+-            GLES20.glUseProgram(mProgram);
+-
+-            // Get handle to vertex shader's vPosition member
+-            mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+-
+-            // Enable a handle to the triangle vertices
+-            GLES20.glEnableVertexAttribArray(mPositionHandle);
+-
+-            // Get handle to fragment shader's vColor member
+-            mColor = GLES20.glGetAttribLocation(mProgram, "vColor");
+-
+-            // Enable a handle to the color vertices
+-            GLES20.glEnableVertexAttribArray(mColor);
+-
+-            // Get handle to shape's transformation matrix
+-            mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+-            checkGlError("glGetUniformLocation");
+-
+-            // Apply the projection and view transformation
+-            GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+-            checkGlError("glUniformMatrix4fv");
+-
+-            // Prepare the coordinate data
+-            GLES20.glVertexAttribPointer(
+-                    mPositionHandle, COORDS_PER_VERTEX,
+-                    GLES20.GL_FLOAT, false,
+-                    VERTEX_STRIDE, mVertexBuffer);
+-
+-            // Prepare the color data
+-            if (changeColor) {
+-                GLES20.glVertexAttribPointer(
+-                        mColor, COORDS_PER_COLORS,
+-                        GLES20.GL_FLOAT, false,
+-                        COLORS_STRIDE, mColor2Buffer);
+-            } else {
+-                GLES20.glVertexAttribPointer(
+-                        mColor, COORDS_PER_COLORS,
+-                        GLES20.GL_FLOAT, false,
+-                        COLORS_STRIDE, mColor1Buffer);
+-            }
+-
+-            // Draw the shape
+-            GLES20.glDrawElements(
+-                    GLES20.GL_TRIANGLES, INDICES.length,
+-                    GLES20.GL_UNSIGNED_SHORT, mIndexBuffer);
+-
+-            // Disable vertex array
+-            GLES20.glDisableVertexAttribArray(mPositionHandle);
+-            // Disable color array
+-            GLES20.glDisableVertexAttribArray(mColor);
+-        }
+-    }
+-
+-    /**
+-     * Utility method for compiling a OpenGL shader.
+-     *
+-     * <p><strong>Note:</strong> When developing shaders, use the checkGlError()
+-     * method to debug shader coding errors.</p>
+-     *
+-     * @param type       - Vertex or fragment shader type.
+-     * @param shaderCode - String containing the shader code.
+-     * @return - Returns an mId for the shader.
+-     */
+-    public static int loadShader(int type, String shaderCode) {
+-
+-        // Create a vertex shader type (GLES20.GL_VERTEX_SHADER)
+-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
+-        int shader = GLES20.glCreateShader(type);
+-        checkGlError("glCreateShader type=" + type);
+-
+-        // Add the source code to the shader and compile it
+-        GLES20.glShaderSource(shader, shaderCode);
+-        GLES20.glCompileShader(shader);
+-
+-        int[] compiled = new int[1];
+-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+-        if (compiled[0] == 0) {
+-            Log.e(TAG, "Could not compile shader " + type + ":");
+-            Log.e(TAG, " " + GLES20.glGetShaderInfoLog(shader));
+-            GLES20.glDeleteShader(shader);
+-            shader = 0;
+-        }
+-
+-        return shader;
+-    }
+-
+-    /**
+-     * Utility method for debugging OpenGL calls. Provide the name of the call
+-     * just after making it:
+-     *
+-     * <pre>
+-     * mColor = GLES20.glGetUniformLocation(mProgram, "vColor");
+-     * MyGLRenderer.checkGlError("glGetUniformLocation");</pre>
+-     *
+-     * If the operation is not successful, the check throws an error.
+-     *
+-     * @param glOperation - Name of the OpenGL call to check.
+-     */
+-    public static void checkGlError(String glOperation) {
+-        int error = GLES20.glGetError();
+-        if (error != GLES20.GL_NO_ERROR) {
+-            Log.e(TAG, glOperation + ": glError " + error);
+-            throw new RuntimeException(glOperation + ": glError " + error);
+-        }
+-    }
+-
+-    /**
+-     * Creates a direct float buffer, and copy coords into it.
+-     *
+-     * @param coords - data to be copied.
+-     */
+-    public static FloatBuffer allocateFloatBuffer(float[] coords) {
+-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(coords.length * BYTES_PER_FLOAT);
+-        byteBuffer.order(ByteOrder.nativeOrder());
+-        FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+-        floatBuffer.put(coords);
+-        floatBuffer.position(0);
+-        return floatBuffer;
+-    }
+-
+-    /**
+-     * Creates a direct short buffer, and copy coords into it.
+-     *
+-     * @param coords - data to be copied.
+-     */
+-    public static ShortBuffer allocateShortBuffer(short[] coords) {
+-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(coords.length * BYTES_PER_SHORT);
+-        byteBuffer.order(ByteOrder.nativeOrder());
+-        ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
+-        shortBuffer.put(coords);
+-        shortBuffer.position(0);
+-        return shortBuffer;
+-    }
+-
+-}
+Index: build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- build.gradle	(date 1435694664000)
++++ build.gradle	(revision )
+@@ -43,5 +43,5 @@
+     compile 'com.android.support:support-v4:22.+'
+     compile 'com.android.support:appcompat-v7:22.+'
+     compile 'com.android.support:mediarouter-v7:22.+'
+-    compile 'com.google.android.gms:play-services-cast:7.5.+'
++    compile 'com.google.android.gms:play-services-cast:7.5.0'
+ }
+Index: res/layout/first_screen_layout.xml
+===================================================================
+--- res/layout/first_screen_layout.xml	(date 1435694664000)
++++ res/layout/first_screen_layout.xml	(date 1435694664000)
+@@ -1,49 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<!-- Copyright (C) 2015 The Android Open Source Project
+-
+-     Licensed under the Apache License, Version 2.0 (the "License");
+-     you may not use this file except in compliance with the License.
+-     You may obtain a copy of the License at
+-
+-          http://www.apache.org/licenses/LICENSE-2.0
+-
+-     Unless required by applicable law or agreed to in writing, software
+-     distributed under the License is distributed on an "AS IS" BASIS,
+-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-     See the License for the specific language governing permissions and
+-     limitations under the License.
+--->
+-
+-<!-- The content that we show on secondary displays.
+-     See corresponding Java code CastRemoteDisplayMainActivity.java. -->
+-
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-             android:layout_width="match_parent"
+-             android:layout_height="match_parent">
+-
+-    <RelativeLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="match_parent">
+-
+-        <android.opengl.GLSurfaceView
+-                android:id="@+id/surface_view"
+-                android:layout_width="match_parent"
+-                android:layout_height="match_parent"/>
+-    </RelativeLayout>
+-
+-    <RelativeLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="match_parent">
+-
+-        <TextView android:id="@+id/title"
+-                  android:layout_width="match_parent"
+-                  android:layout_height="wrap_content"
+-                  android:paddingTop="10dp"
+-                  android:gravity="center_horizontal"
+-                  android:textAppearance="?android:attr/textAppearanceLarge"
+-                  android:textColor="@color/white"
+-                  android:text="@string/app_description"
+-                  android:textAllCaps="true"/>
+-
+-    </RelativeLayout>
+-</FrameLayout>
+\ No newline at end of file
+Index: src/com/example/castremotedisplay/CubeRenderer.java
+===================================================================
+--- src/com/example/castremotedisplay/CubeRenderer.java	(date 1435694664000)
++++ src/com/example/castremotedisplay/CubeRenderer.java	(date 1435694664000)
+@@ -1,138 +0,0 @@
+-/*
+- * Copyright (C) 2015 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.example.castremotedisplay;
+-
+-import android.opengl.GLES20;
+-import android.opengl.GLSurfaceView;
+-import android.opengl.Matrix;
+-import android.os.SystemClock;
+-import android.util.Log;
+-
+-import javax.microedition.khronos.egl.EGLConfig;
+-import javax.microedition.khronos.opengles.GL10;
+-
+-/**
+- * Render a pair of tumbling cubes using OpenGL ES 2.0.
+- */
+-public class CubeRenderer implements GLSurfaceView.Renderer {
+-
+-    private static final String TAG = "CubeRenderer";
+-
+-    private static final float ANGLE_INCREMENT = 1.2f;
+-    private static final boolean CALCULATE_FPS = false;
+-
+-    private Cube mCube;
+-    private float mAngle;
+-    private boolean mChangeColor;
+-    private long mLastTime;
+-    private long mFpsCounter;
+-
+-    protected final float[] mMMatrix = new float[16];
+-    protected final float[] mMVMatrix = new float[16];
+-    protected final float[] mMVPMatrix = new float[16];
+-    protected final float[] mProjectionMatrix = new float[16];
+-    protected final float[] mViewMatrix = new float[16];
+-    protected final float[] mRotationMatrix = new float[16];
+-
+-    public void onDrawFrame(GL10 unused) {
+-        if (CALCULATE_FPS) {
+-            long currentTime = SystemClock.uptimeMillis();
+-            if (mLastTime == 0) {
+-                mLastTime = currentTime;
+-            } else {
+-                mFpsCounter++;
+-                long diffTime = currentTime - mLastTime;
+-                if (diffTime >= 1000) {
+-                    Log.d(TAG, "fps=" + mFpsCounter);
+-                    mFpsCounter = 0;
+-                    mLastTime = currentTime;
+-                }
+-            }
+-        }
+-
+-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+-
+-        // Set the camera position
+-        Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -10, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+-
+-        // Configure matrices for first cube
+-        Matrix.setIdentityM(mMMatrix, 0);
+-
+-        Matrix.translateM(mMMatrix, 0, 0.0f, -0.5f, -1.5f);
+-
+-        Matrix.setRotateM(mRotationMatrix, 0, 2 * mAngle, 0.0f, 1.0f, 1.0f);
+-        Matrix.multiplyMM(mMMatrix, 0, mRotationMatrix, 0, mMMatrix, 0);
+-
+-        Matrix.multiplyMM(mMVMatrix, 0, mViewMatrix, 0, mMMatrix, 0);
+-        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVMatrix, 0);
+-
+-        mCube.draw(mMVPMatrix, mChangeColor);
+-
+-        // Configure matrices for second cube
+-        Matrix.setIdentityM(mMMatrix, 0);
+-
+-        Matrix.translateM(mMMatrix, 0, 0.0f, 2.0f, 0.0f);
+-
+-        Matrix.setRotateM(mRotationMatrix, 0, -mAngle, 0.0f, 1.0f, 1.0f);
+-        Matrix.multiplyMM(mMMatrix, 0, mRotationMatrix, 0, mMMatrix, 0);
+-
+-        Matrix.multiplyMM(mMVMatrix, 0, mViewMatrix, 0, mMMatrix, 0);
+-        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVMatrix, 0);
+-
+-        mCube.draw(mMVPMatrix, mChangeColor);
+-
+-        mAngle += ANGLE_INCREMENT;
+-    }
+-
+-    public void onSurfaceChanged(GL10 unused, int width, int height) {
+-        float ratio = (float) width / height;
+-        GLES20.glViewport(0, 0, width, height);
+-
+-        // Configure perspective with field of view
+-        float fov = 30.0f;
+-        float near = 1.0f;
+-        float far = 100.0f;
+-        float top = (float) Math.tan(fov * Math.PI / 360.0f) * near;
+-        float bottom = -top;
+-        float left = ratio * bottom;
+-        float right = ratio * top;
+-        Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
+-    }
+-
+-    public void onSurfaceCreated(GL10 unused, EGLConfig config) {
+-        // Set background color
+-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+-
+-        // Depth handling
+-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+-        GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+-
+-        // Set anti-aliasing
+-        GLES20.glEnable(GLES20.GL_BLEND);
+-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+-
+-        // Important to initialize the graphics on the GL thread
+-        mCube = new Cube();
+-    }
+-
+-    /**
+-     * Utility method to allow the user to change the cube color.
+-     */
+-    public void changeColor() {
+-        mChangeColor = !mChangeColor;
+-    }
+-}
+Index: res/layout/main_layout.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- res/layout/main_layout.xml	(date 1435694664000)
++++ res/layout/main_layout.xml	(revision )
+@@ -25,13 +25,12 @@
+             android:id="@+id/title"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:layout_alignParentTop="true"
+-            android:layout_marginTop="160dp"
+-            android:gravity="center_vertical|center_horizontal"
++        android:gravity="center_vertical|center_horizontal"
+             android:textAppearance="?android:attr/textAppearanceLarge"
+             android:textColor="@color/text"
+             android:text="@string/app_description"
+-            android:textAllCaps="true"/>
++            android:textAllCaps="true"
++        android:layout_alignParentTop="true" />
+ 
+     <com.example.castremotedisplay.MediaRouterButtonView
+             android:id="@+id/media_route_button_view"
+\ No newline at end of file
+Index: src/com/example/castremotedisplay/CastRemoteDisplayActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/com/example/castremotedisplay/CastRemoteDisplayActivity.java	(date 1435694664000)
++++ src/com/example/castremotedisplay/CastRemoteDisplayActivity.java	(revision )
+@@ -19,6 +19,7 @@
+ import com.google.android.gms.cast.CastDevice;
+ import com.google.android.gms.cast.CastMediaControlIntent;
+ import com.google.android.gms.cast.CastRemoteDisplayLocalService;
++import com.google.android.gms.common.api.GoogleApiClient;
+ import com.google.android.gms.common.api.Status;
+ 
+ import android.app.PendingIntent;
+@@ -66,6 +67,7 @@
+     private MediaRouter mMediaRouter;
+     private MediaRouteSelector mMediaRouteSelector;
+ 
++    private GoogleApiClient mApiClient;
+     private CastDevice mCastDevice;
+ 
+     /**
+@@ -245,4 +247,30 @@
+                 });
+     }
+ 
++    /**
++     * Send a text message to the receiver
++     *
++     * @param message
++     */
++    private void sendMessage(String message) {
++        if (mApiClient != null && mHelloWorldChannel != null) {
++            try {
++                Cast.CastApi.sendMessage(mApiClient,
++                        mHelloWorldChannel.getNamespace(), message)
++                        .setResultCallback(new ResultCallback<Status>() {
++                            @Override
++                            public void onResult(Status result) {
++                                if (!result.isSuccess()) {
++                                    Log.e(TAG, "Sending message failed");
++                                }
++                            }
++                        });
++            } catch (Exception e) {
++                Log.e(TAG, "Exception while sending message", e);
++            }
++        } else {
++            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT)
++                    .show();
++        }
++    }
+ }
+Index: res/layout/second_screen_layout.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- res/layout/second_screen_layout.xml	(date 1435694664000)
++++ res/layout/second_screen_layout.xml	(revision )
+@@ -48,7 +48,50 @@
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_marginTop="50dp"
+-            android:layout_gravity="center"
+-            android:text="@string/change_color"/>
++            android:text="@string/home"/>
++
++    <GridLayout
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center_horizontal"
++        android:columnCount="4"
++        android:rowCount="4">
++
++        <Button
++            android:id="@+id/up_button"
++            android:layout_width="100dp"
++            android:layout_height="wrap_content"
++            android:text="@string/up"
++            android:layout_row="0"
++            android:layout_column="1" />
++        <Button
++            android:id="@+id/down_button"
++            android:layout_width="100dp"
++            android:layout_height="wrap_content"
++            android:text="@string/down"
++            android:layout_row="2"
++            android:layout_column="1" />
++        <Button
++            android:id="@+id/left_button"
++            android:layout_width="100dp"
++            android:layout_height="wrap_content"
++            android:text="@string/left"
++            android:layout_row="1"
++            android:layout_column="0" />
++        <Button
++            android:id="@+id/right_button"
++            android:layout_width="100dp"
++            android:layout_height="wrap_content"
++            android:text="@string/right"
++            android:layout_row="1"
++            android:layout_column="2" />
++        <Button
++            android:id="@+id/click_button"
++            android:layout_width="100dp"
++            android:layout_height="wrap_content"
++            android:text="@string/click"
++            android:layout_row="1"
++            android:layout_column="1" />
++    </GridLayout>
+ 
+ </LinearLayout>

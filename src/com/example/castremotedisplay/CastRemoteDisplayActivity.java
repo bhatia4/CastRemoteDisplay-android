@@ -25,9 +25,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -42,28 +39,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * <h3>CastRemoteDisplayActivity</h3>
- * <p>
- * This code shows how to create an activity that renders some content on a
- * Cast device using a {@link com.google.android.gms.cast.CastPresentation}.
- * </p>
- * <p>
- * The activity uses the {@link MediaRouter} API to select a cast route
- * using a menu item.
- * When a presentation display is available, we stop
- * showing content in the main activity and instead start a {@link CastRemoteDisplayLocalService}
- * that will create a {@link com.google.android.gms.cast.CastPresentation} to render content on the
- * cast remote display. When the cast remote display is removed, we revert to showing content in
- * the main activity. We also write information about displays and display-related events
- * to the Android log which you can read using <code>adb logcat</code>.
- * </p>
- */
 public class CastRemoteDisplayActivity extends ActionBarActivity {
 
     public final static String TAG = "CastRDisplayActivity";
@@ -102,20 +81,7 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
         setupActionBar();
 
         // Local UI
-        Button button = (Button) findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Change the remote display animation color when the button is clicked
-                PresentationService presentationService
-                        = (PresentationService) CastRemoteDisplayLocalService.getInstance();
-                if (presentationService != null) {
-                    presentationService.changeColor();
-                }
-            }
-        });
-
-        button = (Button) findViewById(R.id.up_button);
+        Button button = (Button) findViewById(R.id.up_button);
         button.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View v) {
@@ -181,19 +147,11 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 .addControlCategory(
                         CastMediaControlIntent.categoryForCast(getString(R.string.app_id)))
                 .build();
-        if (isRemoteDisplaying()) {
-            // The Activity has been recreated and we have an active remote display session,
-            // so we need to set the selected device instance
-            CastDevice castDevice = CastDevice
-                    .getFromBundle(mMediaRouter.getSelectedRoute().getExtras());
-            mCastDevice = castDevice;
-            launchReceiver();
-        } else {
-            Bundle extras = getIntent().getExtras();
-            if (extras != null) {
-                mCastDevice = extras.getParcelable(MainActivity.INTENT_EXTRA_CAST_DEVICE);
-            }
-        }
+
+        CastDevice castDevice = CastDevice
+                .getFromBundle(mMediaRouter.getSelectedRoute().getExtras());
+        mCastDevice = castDevice;
+        launchReceiver();
 
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
@@ -260,21 +218,12 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (!isRemoteDisplaying()) {
-            if (mCastDevice != null) {
-                startCastService(mCastDevice);
-            }
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mMediaRouter.removeCallback(mMediaRouterCallback);
-    }
-
-    private boolean isRemoteDisplaying() {
-        return CastRemoteDisplayLocalService.getInstance() != null;
     }
 
     private void initError() {
@@ -314,49 +263,9 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
 
                 @Override
                 public void onRouteUnselected(MediaRouter router, RouteInfo info) {
-                    if (isRemoteDisplaying()) {
-                        CastRemoteDisplayLocalService.stopService();
-                    }
                     mCastDevice = null;
-                    CastRemoteDisplayActivity.this.finish();
                 }
             };
-
-    private void startCastService(CastDevice castDevice) {
-        Intent intent = new Intent(CastRemoteDisplayActivity.this,
-                CastRemoteDisplayActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent notificationPendingIntent = PendingIntent.getActivity(
-                CastRemoteDisplayActivity.this, 0, intent, 0);
-
-        CastRemoteDisplayLocalService.NotificationSettings settings =
-                new CastRemoteDisplayLocalService.NotificationSettings.Builder()
-                        .setNotificationPendingIntent(notificationPendingIntent).build();
-
-        CastRemoteDisplayLocalService.startService(CastRemoteDisplayActivity.this,
-                PresentationService.class, getString(R.string.app_id),
-                castDevice, settings,
-                new CastRemoteDisplayLocalService.Callbacks() {
-                    @Override
-                    public void onRemoteDisplaySessionStarted(
-                            CastRemoteDisplayLocalService service) {
-                        Log.d(TAG, "onServiceStarted");
-                    }
-
-                    @Override
-                    public void onRemoteDisplaySessionError(Status errorReason) {
-                        int code = errorReason.getStatusCode();
-                        Log.d(TAG, "onServiceError: " + errorReason.getStatusCode());
-                        initError();
-
-                        mCastDevice = null;
-                        CastRemoteDisplayActivity.this.finish();
-                    }
-                });
-
-        mCastDevice = castDevice;
-        launchReceiver();
-    }
 
     /**
      * Send a text message to the receiver

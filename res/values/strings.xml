@@ -16,13 +16,11 @@
   -->
 <resources>
 
-    <string name="app_name">CastRemoteDisplay</string>
-    <string name="app_description">Click Play, Start Remote</string>
+    <string name="app_name">CareTainment</string>
+    <string name="app_description">Prototype: Click Play</string>
     <string name="app_id">AAECE0D8</string>
     <string name="presentation_with_media_router_activity_text">Remote Active</string>
     <string name="presentation_with_media_router_play_on">Play on...</string>
-    <string name="presentation_with_media_router_now_playing_locally">Now playing on main display \'%s\'.</string>
-    <string name="presentation_with_media_router_now_playing_remotely">Now playing on secondary display \'%s\'.</string>
     <string name="init_error">Error starting the remote display</string>
     <string name="play">PLAY</string>
     <string name="home">Home</string>

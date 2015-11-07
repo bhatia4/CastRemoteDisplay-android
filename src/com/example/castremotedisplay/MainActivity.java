@@ -20,11 +20,9 @@ import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.MediaRouteButton;
@@ -33,11 +31,9 @@ import android.support.v7.media.MediaRouter;
 import android.support.v7.media.MediaRouter.RouteInfo;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 /**
  * Main activity for application that displays a button to allow the user to select a Cast device
- * for the Remote Display API.
  */
 public class MainActivity extends ActionBarActivity {
 
@@ -57,10 +53,6 @@ public class MainActivity extends ActionBarActivity {
 
         setContentView(R.layout.main_layout);
         setFullScreen();
-
-        TextView titleTextView = (TextView) findViewById(R.id.title);
-        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/Roboto-Light.ttf");
-        titleTextView.setTypeface(typeface);
 
         mMediaRouteSelector = new MediaRouteSelector.Builder()
                 .addControlCategory(
@@ -134,6 +126,7 @@ public class MainActivity extends ActionBarActivity {
 
                 @Override
                 public void onRouteUnselected(MediaRouter router, RouteInfo info) {
+                    mMediaRouter.removeCallback(mMediaRouterCallback);
                 }
             };
 
@@ -159,5 +152,4 @@ public class MainActivity extends ActionBarActivity {
         dialog.show();
         return false;
     }
-
 }
