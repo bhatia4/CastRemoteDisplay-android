@@ -43,12 +43,26 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="@string/presentation_with_media_router_activity_text"/>
 
-    <Button
-            android:id="@+id/button"
+    <RelativeLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:text="@string/home"/>
+
+        <Button
+            android:id="@+id/back_button"
+            android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="50dp"
-            android:text="@string/home"/>
+            android:text="@string/back" />
+    </RelativeLayout>
 
     <GridLayout
         android:layout_width="wrap_content"

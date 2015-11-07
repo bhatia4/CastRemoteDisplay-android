@@ -16,10 +16,14 @@
 
 package com.example.castremotedisplay;
 
+import com.google.android.gms.cast.ApplicationMetadata;
+import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.CastRemoteDisplayLocalService;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 
 import android.app.PendingIntent;
@@ -38,6 +42,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <h3>CastRemoteDisplayActivity</h3>
@@ -58,7 +66,13 @@ import android.widget.Toast;
  */
 public class CastRemoteDisplayActivity extends ActionBarActivity {
 
-    private final String TAG = "CastRDisplayActivity";
+    public final static String TAG = "CastRDisplayActivity";
+    private final Map<String, StateMap> statesMap = new HashMap<String, StateMap>()
+    {{
+            put(StateMap.selectEntertainment, new StateMap(StateMap.selectActivities, StateMap.selectHealth, StateMap.selectActivities, StateMap.selectHealth, StateMap.expandEntertainment));
+            put(StateMap.selectHealth, new StateMap(StateMap.selectEntertainment, StateMap.selectActivities, StateMap.selectEntertainment, StateMap.selectActivities, StateMap.expandHealth));
+            put(StateMap.selectActivities, new StateMap(StateMap.selectHealth, StateMap.selectEntertainment, StateMap.selectHealth, StateMap.selectEntertainment, StateMap.expandActivities));
+    }};
 
     // Second screen
     private Toolbar mToolbar;
@@ -68,7 +82,12 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
     private MediaRouteSelector mMediaRouteSelector;
 
     private GoogleApiClient mApiClient;
+    private HelloWorldChannel mHelloWorldChannel;
     private CastDevice mCastDevice;
+    private Cast.Listener mCastListener;
+    private GoogleApiClient.ConnectionCallbacks mConnectionCallbacks;
+    private GoogleApiClient.OnConnectionFailedListener mConnectionFailedListener;
+    private String mLastState;
 
     /**
      * Initialization of the Activity after it is first created. Must at least
@@ -80,11 +99,10 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.second_screen_layout);
-        setFullScreen();
         setupActionBar();
 
         // Local UI
-        final Button button = (Button) findViewById(R.id.button);
+        Button button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -94,6 +112,67 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 if (presentationService != null) {
                     presentationService.changeColor();
                 }
+            }
+        });
+
+        button = (Button) findViewById(R.id.up_button);
+        button.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+                  sendMessageBasedOnChosenState(StateMap.StatesEnum.UpState);
+              }
+          });
+
+        button = (Button) findViewById(R.id.down_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessageBasedOnChosenState(StateMap.StatesEnum.DownState);
+            }
+        });
+
+        button = (Button) findViewById(R.id.left_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessageBasedOnChosenState(StateMap.StatesEnum.LeftState);
+            }
+        });
+
+        button = (Button) findViewById(R.id.right_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessageBasedOnChosenState(StateMap.StatesEnum.RightState);
+            }
+        });
+
+        button = (Button) findViewById(R.id.click_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mLastState!=null && mLastState.startsWith("select-")) {
+                    sendMessageBasedOnChosenState(StateMap.StatesEnum.ClickState);
+                }
+            }
+        });
+
+        button = (Button) findViewById(R.id.back_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mLastState!=null)
+                    if (mLastState.startsWith("select-"))
+                    {
+                        sendMessage("select");
+                    }
+                    else
+                    if (mLastState.startsWith("expand-"))
+                    {
+                        String lastExpandedState = mLastState.split("-")[1];
+                        sendMessage("expand");
+                        sendMessage("select-"+lastExpandedState);
+                    }
             }
         });
 
@@ -108,6 +187,7 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
             CastDevice castDevice = CastDevice
                     .getFromBundle(mMediaRouter.getSelectedRoute().getExtras());
             mCastDevice = castDevice;
+            launchReceiver();
         } else {
             Bundle extras = getIntent().getExtras();
             if (extras != null) {
@@ -119,19 +199,47 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
     }
 
+    private void sendMessageBasedOnChosenState(StateMap.StatesEnum chosenState) {
+        if (mLastState == null)
+            sendMessage(getString(R.string.message_bus_initial_state));
+        else
+            sendMessage(statesMap.get(mLastState).getState(chosenState));
+    }
+
+    /**
+     * Start the receiver app
+     */
+    private void launchReceiver() {
+        try {
+            mCastListener = new Cast.Listener() {
+                @Override
+                public void onApplicationDisconnected(int errorCode) {
+                    Log.d(TAG, "application has stopped");
+                }
+            };
+            // Connect to Google Play services
+            mConnectionCallbacks = new ConnectionCallbacks();
+            mConnectionFailedListener = new ConnectionFailedListener();
+
+            Cast.CastOptions.Builder apiOptionsBuilder = Cast.CastOptions
+                    .builder(mCastDevice, mCastListener);
+
+            mApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Cast.API, apiOptionsBuilder.build())
+                    .addConnectionCallbacks(mConnectionCallbacks)
+                    .addOnConnectionFailedListener(mConnectionFailedListener)
+                    .build();
+
+            mApiClient.connect();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed launchReceiver", e);
+        }
+    }
+
     private void setupActionBar() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mToolbar.setTitle("");
         setSupportActionBar(mToolbar);
-    }
-
-    private void setFullScreen() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                        View.SYSTEM_UI_FLAG_FULLSCREEN |
-                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     /**
@@ -245,6 +353,9 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                         CastRemoteDisplayActivity.this.finish();
                     }
                 });
+
+        mCastDevice = castDevice;
+        launchReceiver();
     }
 
     /**
@@ -256,7 +367,7 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
         if (mApiClient != null && mHelloWorldChannel != null) {
             try {
                 Cast.CastApi.sendMessage(mApiClient,
-                        mHelloWorldChannel.getNamespace(), message)
+                        getString(R.string.message_bus_namespace), message)
                         .setResultCallback(new ResultCallback<Status>() {
                             @Override
                             public void onResult(Status result) {
@@ -269,8 +380,115 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 Log.e(TAG, "Exception while sending message", e);
             }
         } else {
-            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT)
+            Toast.makeText(CastRemoteDisplayActivity.this, message, Toast.LENGTH_SHORT)
                     .show();
+        }
+    }
+
+    /**
+     * Custom message channel
+     */
+    class HelloWorldChannel implements Cast.MessageReceivedCallback {
+
+        /**
+         * @return custom namespace
+         */
+        public String getNamespace() {
+            return getString(R.string.message_bus_namespace);
+        }
+
+        /*
+         * Receive message from the receiver app
+         */
+        @Override
+        public void onMessageReceived(CastDevice castDevice, String namespace,
+                                      String message) {
+            Log.d(TAG, "onMessageReceived: " + message);
+            if (message.indexOf("-")!=-1)
+                mLastState = message;
+            else
+                mLastState = null;
+        }
+    }
+
+    /**
+     * Google Play services callbacks
+     */
+    private class ConnectionCallbacks implements
+            GoogleApiClient.ConnectionCallbacks {
+
+        @Override
+        public void onConnected(Bundle connectionHint) {
+            Log.d(TAG, "onConnected");
+
+            if (mApiClient == null) {
+                // We got disconnected while this runnable was pending
+                // execution.
+                return;
+            }
+
+            // Launch the receiver app
+            Cast.CastApi.launchApplication(mApiClient, getString(R.string.app_id), false)
+                    .setResultCallback(
+                            new ResultCallback<Cast.ApplicationConnectionResult>() {
+                                @Override
+                                public void onResult(
+                                        Cast.ApplicationConnectionResult result) {
+                                    Status status = result.getStatus();
+                                    Log.d(TAG,
+                                            "ApplicationConnectionResultCallback.onResult:"
+                                                    + status.getStatusCode());
+                                    if (status.isSuccess()) {
+                                        ApplicationMetadata applicationMetadata = result
+                                                .getApplicationMetadata();
+                                        String mSessionId = result.getSessionId();
+                                        String applicationStatus = result
+                                                .getApplicationStatus();
+                                        boolean wasLaunched = result.getWasLaunched();
+                                        Log.d(TAG, "application name: "
+                                                + applicationMetadata.getName()
+                                                + ", status: " + applicationStatus
+                                                + ", sessionId: " + mSessionId
+                                                + ", wasLaunched: " + wasLaunched);
+
+                                        // Create the custom message
+                                        // channel
+                                        mHelloWorldChannel = new HelloWorldChannel();
+                                        try {
+                                            Cast.CastApi.setMessageReceivedCallbacks(
+                                                    mApiClient,
+                                                    mHelloWorldChannel.getNamespace(),
+                                                    mHelloWorldChannel);
+                                        } catch (IOException e) {
+                                            Log.e(TAG, "Exception while creating channel",
+                                                    e);
+                                        }
+
+                                        // set the initial instructions
+                                        // on the receiver
+//                                        sendMessage(getString(R.string.message_bus_initial_instructions));
+                                    } else {
+                                        Log.e(TAG, "application could not launch");
+                                    }
+                                }
+                            });
+        }
+
+        @Override
+        public void onConnectionSuspended(int cause) {
+            Log.d(TAG, "onConnectionSuspended");
+        }
+    }
+
+    /**
+     * Google Play services callbacks
+     */
+    private class ConnectionFailedListener implements
+            GoogleApiClient.OnConnectionFailedListener {
+
+        @Override
+        public void onConnectionFailed(ConnectionResult result) {
+            Log.e(TAG, "onConnectionFailed ");
         }
     }
 }
