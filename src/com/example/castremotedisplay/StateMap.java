@@ -17,8 +17,22 @@ public class StateMap {
     public static final String selectHealth = "select-health";
     public static final String selectActivities = "select-activities";
     public static final String expandEntertainment = "expand-entertainment";
+    public static final String selectEntertainmentItem1 = "select-entertainment-item-1";
+    public static final String selectEntertainmentItem2 = "select-entertainment-item-2";
+    public static final String engageEntertainmentItem1 = "engage-entertainment-item-1";
+    public static final String engageEntertainmentItem2 = "engage-entertainment-item-2";
     public static final String expandHealth = "expand-health";
+    public static final String selectHealthItem1 = "select-health-item-1";
+    public static final String selectHealthItem2 = "select-health-item-2";
+    public static final String selectHealthItem3 = "select-health-item-3";
+    public static final String selectHealthItem4 = "select-health-item-4";
+    public static final String selectHealthItem5 = "select-health-item-5";
+
     public static final String expandActivities = "expand-activities";
+    public static final String selectActivitiesItem1 = "select-activities-item-1";
+    public static final String selectActivitiesItem2 = "select-activities-item-2";
+    public static final String selectActivitiesItem3 = "select-activities-item-3";
+    public static final String selectActivitiesItem4 = "select-activities-item-4";
 
     private String leftState;
     private String rightState;

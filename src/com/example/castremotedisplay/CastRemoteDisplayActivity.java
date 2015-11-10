@@ -20,11 +20,11 @@ import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastMediaControlIntent;
-import com.google.android.gms.cast.CastRemoteDisplayLocalService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -51,7 +51,21 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
             put(StateMap.selectEntertainment, new StateMap(StateMap.selectActivities, StateMap.selectHealth, StateMap.selectActivities, StateMap.selectHealth, StateMap.expandEntertainment));
             put(StateMap.selectHealth, new StateMap(StateMap.selectEntertainment, StateMap.selectActivities, StateMap.selectEntertainment, StateMap.selectActivities, StateMap.expandHealth));
             put(StateMap.selectActivities, new StateMap(StateMap.selectHealth, StateMap.selectEntertainment, StateMap.selectHealth, StateMap.selectEntertainment, StateMap.expandActivities));
-    }};
+            put(StateMap.expandEntertainment, new StateMap(StateMap.selectEntertainmentItem1, StateMap.selectEntertainmentItem1, StateMap.selectEntertainmentItem1, StateMap.selectEntertainmentItem1, null));
+            put(StateMap.selectEntertainmentItem1, new StateMap(StateMap.selectEntertainmentItem2, StateMap.selectEntertainmentItem2, StateMap.selectEntertainmentItem2, StateMap.selectEntertainmentItem2, StateMap.engageEntertainmentItem1));
+            put(StateMap.selectEntertainmentItem2, new StateMap(StateMap.selectEntertainmentItem1, StateMap.selectEntertainmentItem1, StateMap.selectEntertainmentItem1, StateMap.selectEntertainmentItem1, StateMap.engageEntertainmentItem2));
+            put(StateMap.expandHealth, new StateMap(StateMap.selectHealthItem1, StateMap.selectHealthItem1, StateMap.selectHealthItem1, StateMap.selectHealthItem1, null));
+            put(StateMap.selectHealthItem1, new StateMap(StateMap.selectHealthItem5, StateMap.selectHealthItem2, StateMap.selectHealthItem5, StateMap.selectHealthItem2, null));
+            put(StateMap.selectHealthItem2, new StateMap(StateMap.selectHealthItem1, StateMap.selectHealthItem3, StateMap.selectHealthItem1, StateMap.selectHealthItem3, null));
+            put(StateMap.selectHealthItem3, new StateMap(StateMap.selectHealthItem2, StateMap.selectHealthItem4, StateMap.selectHealthItem2, StateMap.selectHealthItem4, null));
+            put(StateMap.selectHealthItem4, new StateMap(StateMap.selectHealthItem3, StateMap.selectHealthItem5, StateMap.selectHealthItem3, StateMap.selectHealthItem5, null));
+            put(StateMap.selectHealthItem5, new StateMap(StateMap.selectHealthItem4, StateMap.selectHealthItem1, StateMap.selectHealthItem4, StateMap.selectHealthItem1, null));
+            put(StateMap.expandActivities, new StateMap(StateMap.selectActivitiesItem1, StateMap.selectActivitiesItem1, StateMap.selectActivitiesItem1, StateMap.selectActivitiesItem1, null));
+            put(StateMap.selectActivitiesItem1, new StateMap(StateMap.selectActivitiesItem4, StateMap.selectActivitiesItem2, StateMap.selectActivitiesItem4, StateMap.selectActivitiesItem2, null));
+            put(StateMap.selectActivitiesItem2, new StateMap(StateMap.selectActivitiesItem1, StateMap.selectActivitiesItem3, StateMap.selectActivitiesItem1, StateMap.selectActivitiesItem3, null));
+            put(StateMap.selectActivitiesItem3, new StateMap(StateMap.selectActivitiesItem2, StateMap.selectActivitiesItem4, StateMap.selectActivitiesItem2, StateMap.selectActivitiesItem4, null));
+            put(StateMap.selectActivitiesItem4, new StateMap(StateMap.selectActivitiesItem3, StateMap.selectActivitiesItem1, StateMap.selectActivitiesItem3, StateMap.selectActivitiesItem1, null));
+        }};
 
     // Second screen
     private Toolbar mToolbar;
@@ -130,7 +144,13 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 if (mLastState!=null)
                     if (mLastState.startsWith("select-"))
                     {
-                        sendMessage("select");
+                        if (mLastState.contains("-item-"))
+                        {
+                            String lastExpandedState = "expand-"+mLastState.split("-")[1];
+                            sendMessage(lastExpandedState);
+                        }
+                        else
+                            sendMessage("select");
                     }
                     else
                     if (mLastState.startsWith("expand-"))
@@ -223,6 +243,14 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        disconnectFromCastAndReceiver();
+    }
+
+    private void disconnectFromCastAndReceiver() {
+        if (mApiClient != null)
+            mApiClient.disconnect();
+
+        mCastDevice = null;
         mMediaRouter.removeCallback(mMediaRouterCallback);
     }
 
@@ -231,26 +259,6 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
                 getApplicationContext(), R.string.init_error, Toast.LENGTH_SHORT);
         mMediaRouter.selectRoute(mMediaRouter.getDefaultRoute());
         toast.show();
-    }
-
-    /**
-     * Utility method to identify if the route information corresponds to the currently
-     * selected device.
-     *
-     * @param info The route information
-     * @return Whether the route information corresponds to the currently selected device.
-     */
-    private boolean isCurrentDevice(RouteInfo info) {
-        if (mCastDevice == null) {
-            // No device selected
-            return false;
-        }
-        CastDevice device = CastDevice.getFromBundle(info.getExtras());
-        if (!device.getDeviceId().equals(mCastDevice.getDeviceId())) {
-            // The callback is for a different device
-            return false;
-        }
-        return true;
     }
 
     private final MediaRouter.Callback mMediaRouterCallback =
@@ -263,7 +271,11 @@ public class CastRemoteDisplayActivity extends ActionBarActivity {
 
                 @Override
                 public void onRouteUnselected(MediaRouter router, RouteInfo info) {
-                    mCastDevice = null;
+                    disconnectFromCastAndReceiver();
+                    Intent intent = new Intent(CastRemoteDisplayActivity.this,
+                            MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
                 }
             };
 
