@@ -1,0 +1,99 @@
+div.show-med-reminder
+{
+	visibility:visible;
+}
+div.hide-med-reminder
+{
+	visibility:hidden;
+}
+
+div.video-div
+{
+	position:absolute; margin-left:-10px; margin-top:-5px; width:100%; background-color: black;
+}
+div.video-div.hide
+{
+	display: none;
+}
+
+video.video-class
+{
+	padding: 0px; 
+	margin-top: -10px;" 
+}
+video.video-class.hide
+{
+	display: none;
+}
+
+.tablewrapper {
+  position: relative;
+}
+.tablewrapper.hide {
+  position: relative;
+  display:none;
+}
+.table {
+  display: table;
+}
+.row {
+  display: table-row;
+  height:277px;
+  padding: 10px 0px 10px 0px;
+}
+.row.rowspanned {
+  height:554px;
+}
+.row.empty {
+  display: none;
+}
+.cell {
+  display: table-cell;
+  box-shadow:0 0 10px black;
+  width:480px;
+  vertical-align:middle;
+  text-align:center;
+  font-size:44pt;
+  font-family:Calibri;
+  padding: 5px 0px 5px 0px;
+}
+.cell.selected {
+  border:5px solid red;
+}
+.cell.empty {
+  display: none;
+}
+.cell.colspanned {
+  position: absolute;
+  width: 960px;
+}
+.cell.rowspanned {
+  position: absolute;
+  width: 960px;
+  top: 0;
+  bottom: 0;
+}
+
+.cell-expanded
+{
+	text-align:left; 
+	font-size:30pt;
+	padding-left: 15px;
+}
+
+ul {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 1;
+    list-style-type: none;
+}
+ul li {
+   padding: 3px 8px 1px 0px;
+   border-bottom: 1px dotted #000;
+}
+ul li:hover, 
+ul li.selected {
+   font-weight: bold;
+   background-color: orange; 
+}
